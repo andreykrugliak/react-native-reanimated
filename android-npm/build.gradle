@@ -31,7 +31,7 @@ abstract class replaceSoTask extends DefaultTask {
 def getCurrentFlavor() {
     Gradle gradle = getGradle()
     String taskRequestName = gradle.getStartParameter().getTaskRequests().toString()
-    Pattern pattern
+    Pattern pattern = Pattern.compile("(assemble|bundle|install|generate)(\\w*)(Release|Debug)")
 
     if(taskRequestName.contains("assemble")) {
         pattern = Pattern.compile("assemble(\\w+)(Release|Debug)")
@@ -44,7 +44,7 @@ def getCurrentFlavor() {
     if(matcher.find()) {
         return matcher.group(1).toLowerCase()
     }
-    return ""
+    return "NOT-FOUND"
 }
 
 def replaceSoTaskDebug
@@ -67,8 +67,9 @@ rootProject.getSubprojects().forEach({project ->
 
         if(project.getProperties().get("android") && Integer.parseInt(minor) < 65) {
             def projectProperties = project.getProperties()
-            if(!projectProperties.get("reanimated")
-                    || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions"))
+            final NOTFOUND = "NOT-FOUND"
+            if(!NOTFOUND.equals(getCurrentFlavor()) && (!projectProperties.get("reanimated")
+            || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions")))
             ) {
                 def flavorString = getCurrentFlavor()
                 replaceSoTask.appName = project.getProperties().path
